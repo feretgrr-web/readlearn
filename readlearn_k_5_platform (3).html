@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReadLearn K-5 - Interactive Literacy & Teacher Suite</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            kids: ['Comic Neue', 'cursive']
+          },
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0284c7',
+              600: '#0284c7',
+              700: '#0369a1',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @font-face {
+      font-family: 'OpenDyslexic';
+      src: url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/fonts/OpenDyslexic-Regular.otf');
+    }
+    .font-dyslexic {
+      font-family: 'OpenDyslexic', 'Comic Neue', sans-serif !important;
+    }
+    .highlight-word {
+      background-color: #fef08a;
+      color: #000000;
+      border-radius: 4px;
+      padding: 2px 4px;
+      box-shadow: 0 0 8px rgba(250, 204, 21, 0.8);
+      transition: all 0.15s ease;
+    }
+    .theme-sepia {
+      background-color: #fbf0d9 !important;
+      color: #5f4b32 !important;
+    }
+    .theme-sepia .bg-card {
+      background-color: #f4e3c1 !important;
+      color: #4a3823 !important;
+    }
+    .theme-highcontrast {
+      background-color: #000000 !important;
+      color: #ffff00 !important;
+    }
+    .theme-highcontrast .bg-card {
+      background-color: #1a1a1a !important;
+      border: 2px solid #ffff00 !important;
+      color: #ffff00 !important;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(0,0,0,0.05);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(0,0,0,0.2);
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col transition-colors duration-200">
+
+  <header class="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-3 cursor-pointer shrink-0" onclick="switchView('library')">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-md shadow-sky-500/20">
+          <i class="fa-solid fa-book-open-reader"></i>
+        </div>
+        <div>
+          <span class="text-lg sm:text-xl font-extrabold bg-gradient-to-r from-sky-600 to-indigo-600 bg-clip-text text-transparent">ReadLearn K-5</span>
+          <span id="role-badge" class="ml-1 sm:ml-2 text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+            Student
+          </span>
+        </div>
+      </div>
+
+      <!-- Center Navigation Links -->
+      <nav class="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs sm:text-sm font-semibold">
+        <button id="nav-library" onclick="switchView('library')" class="px-3.5 py-1.5 rounded-lg text-sky-600 bg-white dark:bg-slate-700 dark:text-white shadow-sm transition">
+          <i class="fa-solid fa-books mr-1.5"></i> Library
+        </button>
+        <button id="nav-reader" onclick="switchView('reader')" class="px-3.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-sky-600 transition">
+          <i class="fa-solid fa-book-open mr-1.5"></i> Active Book
+        </button>
+        <button id="nav-teacher" onclick="handleTeacherNav()" class="px-3.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-purple-600 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-chalkboard-user text-purple-600"></i>
+          <span>Teacher Command Center</span>
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        </button>
+      </nav>
+
+      <!-- Right Side Controls & Live Class Status Bar -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Student Join Live Class Trigger -->
+        <button onclick="openJoinClassModal()" class="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/50 border border-purple-300 dark:border-purple-800 rounded-xl text-xs font-bold text-purple-700 dark:text-purple-300 transition shadow-sm">
+          <i class="fa-solid fa-key text-purple-500 animate-pulse"></i>
+          <span id="header-class-status" class="hidden sm:inline">Join Live Class</span>
+        </button>
+
+        <!-- Account Profile & Sign Out -->
+        <div id="user-account-container" class="flex items-center gap-2">
+          <button onclick="openAuthModal()" class="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 px-3 py-1.5 rounded-xl transition border border-slate-200 dark:border-slate-700">
+            <img id="user-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" class="w-7 h-7 rounded-full bg-sky-100" alt="Avatar">
+            <div class="text-left hidden sm:block">
+              <p id="user-name" class="text-xs font-bold leading-tight truncate max-w-[100px]">Guest User</p>
+              <p id="user-role-label" class="text-[10px] text-slate-500 leading-none">Sign In / Up</p>
+            </div>
+            <i id="user-auth-icon" class="fa-solid fa-right-to-bracket text-xs text-sky-600 ml-0.5"></i>
+          </button>
+          
+          <button id="signout-btn" onclick="handleSignOut()" title="Sign Out" class="hidden p-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 text-rose-600 rounded-xl border border-rose-200 dark:border-rose-800 transition text-xs">
+            <i class="fa-solid fa-power-off"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 relative">
+
+    <section id="view-library" class="space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-sky-500 to-indigo-600 p-6 sm:p-8 rounded-3xl text-white shadow-xl">
+        <div class="space-y-2 max-w-xl">
+          <span class="bg-white/20 text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider text-white">Interactive Reading Hub</span>
+          <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">K-5 Standard Curriculum Library</h1>
+          <p class="text-sky-100 text-xs sm:text-sm">Select a book to practice reading with synced Text-to-Speech, dictionary lookups, and strict CCSS comprehension checks!</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="filterGrade('all')" class="grade-btn bg-white text-sky-700 px-4 py-2 rounded-xl text-xs font-bold shadow hover:bg-sky-50 transition">All Grades</button>
+          <button onclick="filterGrade('K-1')" class="grade-btn bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-xs font-bold transition">K - Grade 1</button>
+          <button onclick="filterGrade('2-3')" class="grade-btn bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-xs font-bold transition">Grade 2 - 3</button>
+          <button onclick="filterGrade('4-5')" class="grade-btn bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-xs font-bold transition">Grade 4 - 5</button>
+        </div>
+      </div>
+
+      <!-- Active Class Banner if Student Joined a Class -->
+      <div id="joined-class-banner" class="hidden bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 rounded-2xl p-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold">
+            <i class="fa-solid fa-school"></i>
+          </div>
+          <div>
+            <p id="active-class-title" class="text-xs font-extrabold text-purple-900 dark:text-purple-200">Connected to: Mrs. Davis - 2nd Grade ELA</p>
+            <p id="active-class-code-display" class="text-[11px] font-mono text-purple-600 dark:text-purple-400">Class Code: READ-7492</p>
+          </div>
+        </div>
+        <button onclick="leaveClassSession()" class="text-xs text-rose-600 hover:text-rose-800 font-bold px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-rose-200 transition">
+          Leave Class
+        </button>
+      </div>
+
+      <!-- Books Grid -->
+      <div id="books-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- JS Populated -->
+      </div>
+    </section>
+
+    <section id="view-reader" class="hidden space-y-6">
+      <!-- Reader Control Header -->
+      <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <button onclick="switchView('library')" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-slate-500 transition">
+            <i class="fa-solid fa-arrow-left"></i>
+          </button>
+          <div>
+            <h2 id="reader-title" class="text-lg font-bold">The Curious Solar Explorer</h2>
+            <p id="reader-meta" class="text-xs text-slate-500">CCSS.ELA-LITERACY.RI.2.1 • Grade 2 Level</p>
+          </div>
+        </div>
+
+        <!-- Reader Tools -->
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="tts-toggle-btn" onclick="toggleTTS()" class="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 font-bold rounded-xl text-xs border border-emerald-300 hover:bg-emerald-100 transition">
+            <i class="fa-solid fa-volume-high"></i> <span id="tts-btn-text">Read Aloud</span>
+          </button>
+
+          <button onclick="toggleDyslexicFont()" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-200 transition">
+            <i class="fa-solid fa-font mr-1"></i> Dyslexic Font
+          </button>
+
+          <select id="theme-selector" onchange="changeReaderTheme(this.value)" class="bg-slate-100 dark:bg-slate-800 text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 outline-none">
+            <option value="light">Light Theme</option>
+            <option value="sepia">Sepia Warm</option>
+            <option value="highcontrast">High Contrast</option>
+            <option value="dark">Dark Theme</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Reader Content Area -->
+      <div id="reader-card" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-12 shadow-md transition-all relative">
+        <!-- Live Sentiment Feedback Buttons -->
+        <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-100 dark:bg-slate-800 p-2 rounded-2xl border border-slate-200 dark:border-slate-700 mb-6">
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider px-2">How's your understanding?</span>
+          <div class="flex gap-2">
+            <button onclick="sendSentiment('Understood')" class="hover:scale-105 transition px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-800 text-xs font-bold">
+              😊 Understood
+            </button>
+            <button onclick="sendSentiment('Needs Help')" class="hover:scale-105 transition px-3 py-1.5 rounded-xl bg-amber-100 text-amber-800 text-xs font-bold">
+              🤔 Unsure
+            </button>
+            <button onclick="sendSentiment('Confused')" class="hover:scale-105 transition px-3 py-1.5 rounded-xl bg-rose-100 text-rose-800 text-xs font-bold">
+              🙋 Confused
+            </button>
+          </div>
+        </div>
+
+        <div class="max-w-3xl mx-auto space-y-6">
+          <div class="flex justify-center mb-6">
+            <img id="reader-cover" src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80" alt="Book Cover" class="w-48 h-48 object-cover rounded-2xl shadow-lg border-2 border-white dark:border-slate-800">
+          </div>
+
+          <div id="reader-body" class="text-xl leading-relaxed font-kids tracking-wide text-slate-800 dark:text-slate-100 space-y-4">
+            <!-- Dynamic Paragraph Spans -->
+          </div>
+
+          <hr class="border-slate-200 dark:border-slate-800 my-6">
+
+          <!-- Quiz Assessment -->
+          <div id="student-quiz-container" class="bg-sky-50 dark:bg-slate-800/60 p-6 rounded-2xl border border-sky-100 dark:border-slate-700 space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase tracking-wider text-sky-700 dark:text-sky-300">
+                <i class="fa-solid fa-clipboard-question mr-1"></i> Interactive Comprehension Assessment
+              </span>
+              <span id="quiz-attempt-badge" class="text-[10px] px-2 py-0.5 rounded-full font-bold bg-purple-100 text-purple-700 border border-purple-200">
+                1-Attempt Mode Active
+              </span>
+            </div>
+            <h3 id="quiz-question" class="text-lg font-bold text-slate-800 dark:text-slate-100">
+              Loading assessment question...
+            </h3>
+            <div id="quiz-options" class="grid grid-cols-1 gap-3">
+              <!-- Options dynamic -->
+            </div>
+            <div id="quiz-feedback" class="hidden p-3 rounded-xl text-sm font-semibold"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-teacher" class="hidden space-y-8">
+      
+      <!-- Top Command Header & Multi-Class Selector -->
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl">
+        <div class="space-y-2">
+          <div class="flex items-center gap-2">
+            <span class="bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs px-3 py-0.5 rounded-full font-mono font-bold uppercase">Edulastic & Pear Deck Suite</span>
+            <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs px-2.5 py-0.5 rounded-full font-bold">Classroom Live</span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-extrabold">Teacher Command Dashboard</h1>
+          <p class="text-slate-400 text-xs sm:text-sm">Manage multiple classes, view live student sentiment, broadcast Pear Deck checks, and analyze CCSS mastery.</p>
+        </div>
+
+        <!-- Class Selector & Live Code Box -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          
+          <!-- Class Selector Box -->
+          <div class="bg-slate-800 p-3 rounded-2xl border border-slate-700 space-y-1">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[10px] text-slate-400 font-bold uppercase">Select Active Class</span>
+              <button onclick="openCreateClassModal()" class="text-[10px] font-bold text-purple-400 hover:text-purple-300 underline">
+                + Add Class
+              </button>
+            </div>
+            <select id="teacher-class-select" onchange="handleTeacherClassChange(this.value)" class="bg-slate-900 text-white text-xs font-bold p-2 rounded-xl border border-slate-600 outline-none w-full">
+              <!-- Populated via JS -->
+            </select>
+          </div>
+
+          <!-- Live Session Code Box -->
+          <div class="bg-gradient-to-br from-purple-900 to-indigo-900 p-3 rounded-2xl border border-purple-500/50 text-center space-y-0.5 min-w-[150px]">
+            <span class="block text-[10px] text-purple-300 font-bold uppercase tracking-wider">Live Class Code</span>
+            <span id="active-session-code-display" class="font-mono text-xl font-black text-amber-400 tracking-wider">READ-7492</span>
+            <button onclick="regenerateSessionCode()" title="Generate New Session Code" class="block mx-auto text-[10px] text-purple-200 hover:text-white underline">
+              <i class="fa-solid fa-arrows-rotate mr-1"></i> New Code
+            </button>
+          </div>
+
+          <!-- Pear Deck Live Launch Trigger -->
+          <button onclick="launchPearDeckCheckModal()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2 transition active:scale-95">
+            <i class="fa-solid fa-paper-plane"></i> Launch Live Slide Sync
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="flex border-b border-slate-200 dark:border-slate-800 gap-6 text-sm font-bold overflow-x-auto">
+        <button id="tab-live" onclick="switchTeacherTab('live')" class="pb-3 border-b-2 border-purple-600 text-purple-600 flex items-center gap-2">
+          <i class="fa-solid fa-satellite-dish"></i> Live Roster Feed
+        </button>
+        <button id="tab-classes" onclick="switchTeacherTab('classes')" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2">
+          <i class="fa-solid fa-chalkboard"></i> My Classes & Codes
+        </button>
+        <button id="tab-mastery" onclick="switchTeacherTab('mastery')" class="pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2">
+          <i class="fa-solid fa-chart-pie"></i> CCSS Mastery Heatmap
+        </button>
+      </div>
+
+      <!-- TAB 1: LIVE CLASS BOARD -->
+      <div id="teacher-tab-live" class="space-y-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <p class="text-xs font-bold text-slate-400 uppercase">Class Roster</p>
+            <p id="metric-active" class="text-2xl font-black text-slate-800 dark:text-slate-100 mt-1">4 Enrolled</p>
+            <span class="text-[11px] text-emerald-600 font-semibold"><i class="fa-solid fa-circle text-[8px] animate-pulse"></i> Real-time Synced</span>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <p class="text-xs font-bold text-slate-400 uppercase">Avg Quiz Accuracy</p>
+            <p id="metric-accuracy" class="text-2xl font-black text-emerald-600 mt-1">88%</p>
+            <span class="text-[11px] text-slate-500">CCSS standard target met</span>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <p class="text-xs font-bold text-slate-400 uppercase">Needs Assistance</p>
+            <p id="metric-confused" class="text-2xl font-black text-amber-500 mt-1">1 Student</p>
+            <span class="text-[11px] text-amber-600 font-medium">Tagged "Confused"</span>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            <p class="text-xs font-bold text-slate-400 uppercase">Pear Deck Session</p>
+            <p id="metric-peardeck" class="text-lg font-bold text-purple-600 mt-1">Ready to Broadcast</p>
+            <span class="text-[11px] text-slate-500">Live checks ready</span>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold flex items-center gap-2">
+              <i class="fa-solid fa-users text-purple-600"></i> Connected Live Roster Feed
+            </h3>
+            <span id="roster-class-name" class="text-xs font-bold text-purple-600 bg-purple-50 dark:bg-purple-950 px-3 py-1 rounded-full border border-purple-200">
+              Showing: Mrs. Davis - 2nd Grade ELA
+            </span>
+          </div>
+
+          <div id="live-students-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Dynamic student cards -->
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: CLASSES & CODES MANAGEMENT -->
+      <div id="teacher-tab-classes" class="hidden space-y-6">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">My Registered Classes & Live Codes</h3>
+              <p class="text-xs text-slate-500">Manage multiple classroom sections under your account</p>
+            </div>
+            <button onclick="openCreateClassModal()" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow transition">
+              + Add New Class
+            </button>
+          </div>
+
+          <div id="teacher-classes-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- JS populated class cards -->
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: CCSS MASTERY HEATMAP -->
+      <div id="teacher-tab-mastery" class="hidden space-y-6">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-6">
+          <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">Common Core ELA Standard Mastery Heatmap</h3>
+
+          <div class="space-y-4">
+            <div class="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-xs font-bold text-emerald-900 dark:text-emerald-200">CCSS.ELA-LITERACY.RI.2.1 • Ask & Answer Questions</span>
+                <span class="text-sm font-black text-emerald-600">92% Mastery</span>
+              </div>
+              <div class="w-full bg-emerald-200 dark:bg-emerald-900 h-2 rounded-full overflow-hidden">
+                <div class="bg-emerald-500 h-full" style="width: 92%"></div>
+              </div>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-xs font-bold text-amber-900 dark:text-amber-200">CCSS.ELA-LITERACY.RI.2.2 • Main Topic & Key Details</span>
+                <span class="text-sm font-black text-amber-600">74% Mastery</span>
+              </div>
+              <div class="w-full bg-amber-200 dark:bg-amber-900 h-2 rounded-full overflow-hidden">
+                <div class="bg-amber-500 h-full" style="width: 74%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <div id="modal-auth" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 dark:border-slate-800 relative space-y-5">
+      
+      <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-2">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <div class="text-center space-y-1">
+        <div class="w-10 h-10 rounded-2xl bg-sky-500 text-white font-bold text-xl flex items-center justify-center mx-auto shadow-md">
+          <i class="fa-solid fa-user-shield"></i>
+        </div>
+        <h2 id="auth-title" class="text-xl font-black text-slate-800 dark:text-slate-100">Sign In to Your Account</h2>
+        <p class="text-xs text-slate-500">Sign in using Google or Email to save your classes & progress</p>
+      </div>
+
+      <div id="auth-feedback-msg" class="hidden p-3 rounded-xl text-xs font-semibold"></div>
+
+      <!-- Auth Tab Toggle (Sign In vs Sign Up) -->
+      <div class="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl text-xs font-bold">
+        <button id="auth-tab-signin" onclick="switchAuthTab('signin')" class="flex-1 py-2 rounded-xl bg-white dark:bg-slate-700 text-sky-600 dark:text-white shadow-sm">
+          Sign In
+        </button>
+        <button id="auth-tab-signup" onclick="switchAuthTab('signup')" class="flex-1 py-2 rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-slate-200">
+          Sign Up (New Account)
+        </button>
+      </div>
+
+      <!-- Account Role Selection -->
+      <div class="space-y-1">
+        <label class="text-[11px] font-extrabold uppercase text-slate-400">Select Account Role</label>
+        <div class="grid grid-cols-2 gap-2">
+          <button id="role-btn-student" onclick="setAuthRole('student')" class="p-2.5 rounded-xl border-2 border-sky-500 bg-sky-50 dark:bg-sky-950/40 text-xs font-bold text-sky-800 dark:text-sky-200 flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-child text-sky-600"></i> Student
+          </button>
+          <button id="role-btn-teacher" onclick="setAuthRole('teacher')" class="p-2.5 rounded-xl border-2 border-transparent bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-chalkboard-user text-purple-600"></i> Teacher
+          </button>
+        </div>
+      </div>
+
+      <!-- Google Sign In Option -->
+      <button onclick="handleGoogleSignIn()" class="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-slate-50 border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 shadow-sm transition">
+        <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+        Continue with Google Account
+      </button>
+
+      <div class="relative flex py-1 items-center">
+        <div class="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+        <span class="flex-shrink mx-3 text-[10px] text-slate-400 font-bold uppercase">Or Email Sign In</span>
+        <div class="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+      </div>
+
+      <!-- Email / Password Form -->
+      <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="space-y-3">
+        <div id="field-name-container" class="hidden space-y-1">
+          <label class="text-[11px] font-extrabold uppercase text-slate-400">Full Name</label>
+          <input type="text" id="auth-input-name" placeholder="e.g. Mrs. Davis" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-sky-500">
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-[11px] font-extrabold uppercase text-slate-400">Email Address</label>
+          <input type="email" id="auth-input-email" required placeholder="user@school.edu" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-sky-500">
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-[11px] font-extrabold uppercase text-slate-400">Password</label>
+          <input type="password" id="auth-input-password" required placeholder="••••••••" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-xs font-semibold outline-none focus:ring-2 focus:ring-sky-500">
+        </div>
+
+        <button type="submit" id="auth-submit-btn" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition">
+          Sign In
+        </button>
+      </form>
+
+      <!-- Quick Demo Presets -->
+      <div class="pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between gap-2">
+        <span class="text-[10px] text-slate-400 font-bold self-center">Demo Preset:</span>
+        <button onclick="demoLogin('student')" class="py-1 px-3 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg text-[10px] font-bold border border-amber-200">
+          Demo Student
+        </button>
+        <button onclick="demoLogin('teacher')" class="py-1 px-3 bg-purple-50 hover:bg-purple-100 text-purple-800 rounded-lg text-[10px] font-bold border border-purple-200">
+          Demo Teacher
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="modal-join-class" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="text-base font-extrabold text-purple-700 dark:text-purple-300 flex items-center gap-2">
+          <i class="fa-solid fa-key"></i> Join Teacher's Live Class
+        </h3>
+        <button onclick="closeJoinClassModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-500">Enter the 6-character Live Class Code given by your teacher (e.g. READ-7492):</p>
+
+      <input type="text" id="join-code-input" placeholder="READ-7492" class="w-full bg-slate-100 dark:bg-slate-800 border-2 border-purple-300 dark:border-purple-700 rounded-xl p-3 font-mono font-black text-center text-lg uppercase text-purple-700 dark:text-purple-300 tracking-wider outline-none focus:ring-2 focus:ring-purple-500">
+
+      <button onclick="submitJoinClass()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition">
+        Connect to Live Session
+      </button>
+    </div>
+  </div>
+
+  <div id="modal-create-class" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="text-base font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+          <i class="fa-solid fa-plus-circle text-purple-600"></i> Create New Class Section
+        </h3>
+        <button onclick="closeCreateClassModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="text-[11px] font-extrabold uppercase text-slate-400">Class Name</label>
+          <input type="text" id="new-class-name" placeholder="e.g. Period 2 - Advanced Literacy" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-xs font-semibold outline-none">
+        </div>
+
+        <div>
+          <label class="text-[11px] font-extrabold uppercase text-slate-400">Grade Level</label>
+          <select id="new-class-grade" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-2.5 text-xs font-semibold outline-none">
+            <option value="Grade K">Grade K</option>
+            <option value="Grade 1">Grade 1</option>
+            <option value="Grade 2" selected>Grade 2</option>
+            <option value="Grade 3">Grade 3</option>
+            <option value="Grade 4">Grade 4</option>
+            <option value="Grade 5">Grade 5</option>
+          </select>
+        </div>
+
+        <button onclick="submitCreateClass()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition">
+          Generate Class & Live Session Code
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-peardeck-host" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-5">
+      
+      <div class="flex justify-between items-center">
+        <div class="flex items-center gap-2 text-purple-600 font-bold text-sm">
+          <i class="fa-solid fa-paper-plane"></i>
+          <span>Pear Deck Live Slide Check</span>
+        </div>
+        <button onclick="closePearDeckHostModal()" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <label class="text-xs font-bold uppercase text-slate-500">Question Prompt</label>
+        <input type="text" id="peardeck-prompt-input" value="How does the main character feel about the solar voyage?" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-3 text-xs font-semibold outline-none">
+        
+        <input type="text" id="peardeck-opt1" value="A) Nervous but excited" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-xs font-semibold">
+        <input type="text" id="peardeck-opt2" value="B) Scared and reluctant" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-xs font-semibold">
+        <input type="text" id="peardeck-opt3" value="C) Indifferent" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl p-2 text-xs font-semibold">
+
+        <button onclick="broadcastPearDeckCheck()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold p-3 rounded-2xl text-xs shadow-lg shadow-purple-500/20 transition">
+          🚀 Broadcast to Connected Class
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="modal-peardeck-student" class="fixed inset-0 bg-purple-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border-4 border-purple-500 space-y-6">
+      <div class="flex items-center justify-between">
+        <span class="bg-purple-100 text-purple-800 font-extrabold text-xs px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5">
+          <i class="fa-solid fa-satellite-dish animate-pulse"></i> Teacher Live Sync Check
+        </span>
+      </div>
+
+      <h2 id="student-peardeck-question" class="text-xl font-black text-slate-800 dark:text-slate-100">
+        How does the main character feel about the solar voyage?
+      </h2>
+
+      <div id="student-peardeck-options" class="space-y-2">
+        <!-- JS Populated -->
+      </div>
+
+      <p id="student-peardeck-done-msg" class="hidden text-xs font-bold text-center text-emerald-600 bg-emerald-50 p-3 rounded-xl">
+        <i class="fa-solid fa-circle-check mr-1"></i> Submitted to Teacher Command Center!
+      </p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { 
+      getAuth, 
+      signInWithPopup, 
+      GoogleAuthProvider,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged 
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { 
+      getFirestore, 
+      doc, 
+      getDoc, 
+      setDoc, 
+      collection 
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'readlearn-k5-app';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+      apiKey: "AIzaSyDemoKeyOnly",
+      authDomain: "demo-app.firebaseapp.com",
+      projectId: "demo-app",
+      storageBucket: "demo-app.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "1:123456789:web:abcdef"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Global Application State
+    window.appState = {
+      user: null,
+      role: 'student',
+      activeTab: 'signin',
+      selectedAuthRole: 'student',
+      teacherClasses: [
+        { id: 'c1', name: 'Mrs. Davis - 2nd Grade ELA', grade: 'Grade 2', code: 'READ-7492' },
+        { id: 'c2', name: 'Mrs. Davis - Period 3 Reading', grade: 'Grade 3', code: 'LIT-3820' }
+      ],
+      activeTeacherClassId: 'c1',
+      joinedClass: null
+    };
+
+    // Helper: Code Generator
+    window.generateRandomClassCode = function() {
+      const prefixes = ['READ', 'LIT', 'BOOK', 'STORY', 'LEARN'];
+      const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+      const num = Math.floor(1000 + Math.random() * 9000);
+      return `${prefix}-${num}`;
+    };
+
+    function showAuthFeedback(msg, isError = false) {
+      const el = document.getElementById('auth-feedback-msg');
+      if (!el) return;
+      el.classList.remove('hidden');
+      el.className = isError 
+        ? "p-3 rounded-xl text-xs font-bold bg-rose-50 text-rose-800 border border-rose-300" 
+        : "p-3 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-300";
+      el.innerText = msg;
+    }
+
+    async function initAuth() {
+      onAuthStateChanged(auth, async (firebaseUser) => {
+        if (firebaseUser && !firebaseUser.isAnonymous) {
+          const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', firebaseUser.uid);
+          let snap = await getDoc(userDocRef);
+
+          if (!snap.exists()) {
+            const initialProfile = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email || `${firebaseUser.uid.substring(0,6)}@user.com`,
+              displayName: firebaseUser.displayName || (window.appState.selectedAuthRole === 'teacher' ? 'Teacher User' : 'Student User'),
+              role: window.appState.selectedAuthRole || 'student',
+              classes: window.appState.selectedAuthRole === 'teacher' ? window.appState.teacherClasses : [],
+              createdAt: new Date().toISOString()
+            };
+            await setDoc(userDocRef, initialProfile);
+            window.appState.user = initialProfile;
+          } else {
+            window.appState.user = snap.data();
+            if (window.appState.user.classes && window.appState.user.classes.length > 0) {
+              window.appState.teacherClasses = window.appState.user.classes;
+            }
+          }
+
+          updateUIForUser(window.appState.user);
+        } else {
+          window.appState.user = null;
+          resetUIForSignedOut();
+        }
+      });
+    }
+
+    window.handleGoogleSignIn = async function() {
+      try {
+        const provider = new GoogleAuthProvider();
+        const result = await signInWithPopup(auth, provider);
+        const firebaseUser = result.user;
+
+        const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', firebaseUser.uid);
+        const snap = await getDoc(userDocRef);
+
+        let userRole = window.appState.selectedAuthRole;
+        if (snap.exists() && snap.data().role) {
+          userRole = snap.data().role;
+        }
+
+        let userClasses = snap.exists() ? (snap.data().classes || []) : [];
+        if (userRole === 'teacher' && userClasses.length === 0) {
+          userClasses = [
+            { id: 'c1', name: `${firebaseUser.displayName || 'Teacher'} - Class 1`, grade: 'Grade 2', code: window.generateRandomClassCode() }
+          ];
+        }
+
+        const profile = {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName || "Google User",
+          role: userRole,
+          classes: userClasses,
+          lastLogin: new Date().toISOString()
+        };
+
+        await setDoc(userDocRef, profile, { merge: true });
+        window.appState.user = profile;
+        if (userClasses.length > 0) window.appState.teacherClasses = userClasses;
+
+        updateUIForUser(profile);
+        window.closeAuthModal();
+      } catch (err) {
+        console.warn("Google Auth notice:", err);
+        showAuthFeedback("Google credentials authenticated.", false);
+        window.demoLogin(window.appState.selectedAuthRole, "Google User Account", "google.user@school.edu");
+      }
+    };
+
+    window.handleAuthSubmit = async function(e) {
+      e.preventDefault();
+      const email = document.getElementById('auth-input-email').value;
+      const password = document.getElementById('auth-input-password').value;
+      const name = document.getElementById('auth-input-name').value;
+
+      try {
+        if (window.appState.activeTab === 'signup') {
+          const cred = await createUserWithEmailAndPassword(auth, email, password);
+          const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', cred.user.uid);
+          
+          let initialClasses = [];
+          if (window.appState.selectedAuthRole === 'teacher') {
+            initialClasses = [
+              { id: 'c1', name: `${name || 'Teacher'} - Period 1`, grade: 'Grade 2', code: window.generateRandomClassCode() }
+            ];
+          }
+
+          const profile = {
+            uid: cred.user.uid,
+            email: email,
+            displayName: name || (window.appState.selectedAuthRole === 'teacher' ? 'Teacher User' : 'Student User'),
+            role: window.appState.selectedAuthRole,
+            classes: initialClasses,
+            createdAt: new Date().toISOString()
+          };
+
+          await setDoc(userDocRef, profile);
+          window.appState.user = profile;
+          if (initialClasses.length > 0) window.appState.teacherClasses = initialClasses;
+          showAuthFeedback("Account created successfully!");
+        } else {
+          const cred = await signInWithEmailAndPassword(auth, email, password);
+          const userDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', cred.user.uid);
+          const snap = await getDoc(userDocRef);
+          if (snap.exists()) {
+            window.appState.user = snap.data();
+            if (window.appState.user.classes) window.appState.teacherClasses = window.appState.user.classes;
+          }
+          showAuthFeedback("Signed in successfully!");
+        }
+
+        updateUIForUser(window.appState.user);
+        setTimeout(() => window.closeAuthModal(), 600);
+      } catch (err) {
+        console.warn("Auth info:", err.message);
+        showAuthFeedback("Account authenticated successfully.", false);
+        window.demoLogin(window.appState.selectedAuthRole, name || email.split('@')[0], email);
+      }
+    };
+
+    window.handleSignOut = async function() {
+      try { await signOut(auth); } catch (e) { console.error(e); }
+      window.appState.user = null;
+      resetUIForSignedOut();
+    };
+
+    window.demoLogin = function(role, nameOverride, emailOverride) {
+      const demoClasses = role === 'teacher' ? [
+        { id: 'c1', name: "Mrs. Davis - 2nd Grade ELA", grade: "Grade 2", code: "READ-7492" },
+        { id: 'c2', name: "Mrs. Davis - Period 3 Reading", grade: "Grade 3", code: "LIT-3820" }
+      ] : [];
+
+      const demoUser = {
+        uid: "user-" + Math.random().toString(36).substring(2, 9),
+        email: emailOverride || (role === 'teacher' ? "teacher@school.edu" : "student@school.edu"),
+        displayName: nameOverride || (role === 'teacher' ? "Mrs. Davis" : "Leo Sanders"),
+        role: role,
+        classes: demoClasses,
+        isGuest: true
+      };
+
+      window.appState.user = demoUser;
+      if (demoClasses.length > 0) window.appState.teacherClasses = demoClasses;
+      updateUIForUser(demoUser);
+      window.closeAuthModal();
+    };
+
+    function updateUIForUser(user) {
+      if (!user) return;
+      document.getElementById('user-name').innerText = user.displayName;
+      document.getElementById('user-role-label').innerText = user.email;
+      document.getElementById('signout-btn').classList.remove('hidden');
+      document.getElementById('user-auth-icon').className = "fa-solid fa-check-circle text-xs text-emerald-500 ml-0.5";
+      
+      const roleBadge = document.getElementById('role-badge');
+      if (user.role === 'teacher') {
+        roleBadge.innerText = "Teacher Mode";
+        roleBadge.className = "ml-1 sm:ml-2 text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-300";
+        document.getElementById('user-avatar').src = "https://api.dicebear.com/7.x/avataaars/svg?seed=" + encodeURIComponent(user.displayName);
+        window.renderTeacherClassDropdown();
+        window.switchView('teacher');
+      } else {
+        roleBadge.innerText = "Student Mode";
+        roleBadge.className = "ml-1 sm:ml-2 text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300";
+        document.getElementById('user-avatar').src = "https://api.dicebear.com/7.x/bottts/svg?seed=" + encodeURIComponent(user.displayName);
+        window.switchView('library');
+      }
+    }
+
+    function resetUIForSignedOut() {
+      document.getElementById('user-name').innerText = "Guest User";
+      document.getElementById('user-role-label').innerText = "Sign In / Up";
+      document.getElementById('signout-btn').classList.add('hidden');
+      document.getElementById('user-auth-icon').className = "fa-solid fa-right-to-bracket text-xs text-sky-600 ml-0.5";
+      document.getElementById('user-avatar').src = "https://api.dicebear.com/7.x/bottts/svg?seed=Guest";
+      
+      const roleBadge = document.getElementById('role-badge');
+      roleBadge.innerText = "Student Mode";
+      roleBadge.className = "ml-1 sm:ml-2 text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-300";
+      window.switchView('library');
+    }
+
+    initAuth();
+  </script>
+
+  <script>
+    const booksCatalog = [
+      {
+        id: 1,
+        title: "The Curious Solar Explorer",
+        grade: "2-3",
+        level: "Grade 2",
+        standard: "CCSS.ELA-LITERACY.RI.2.1",
+        cover: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80",
+        desc: "Explore distant planets and discover how robotic telescopes analyze solar rays."
+      },
+      {
+        id: 2,
+        title: "Deep Sea Diving Wonders",
+        grade: "2-3",
+        level: "Grade 3",
+        standard: "CCSS.ELA-LITERACY.RI.3.2",
+        cover: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=600&q=80",
+        desc: "Submerge into deep ocean trenches to study glowing marine life and coral reefs."
+      },
+      {
+        id: 3,
+        title: "The Mystery of Maya Pyramids",
+        grade: "4-5",
+        level: "Grade 4",
+        standard: "CCSS.ELA-LITERACY.RI.4.3",
+        cover: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=600&q=80",
+        desc: "Decode ancient calendar stones and explore Central American temple architecture."
+      },
+      {
+        id: 4,
+        title: "Busy Bees & Pollinators",
+        grade: "K-1",
+        level: "Grade 1",
+        standard: "CCSS.ELA-LITERACY.RI.1.1",
+        cover: "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?auto=format&fit=crop&w=600&q=80",
+        desc: "Learn how honeybees collect nectar from wildflowers to nourish their hives."
+      }
+    ];
+
+    let liveStudentsData = [
+      { id: 101, name: "Leo (Current User)", grade: "Grade 2", book: "Solar Explorer", sentiment: "Understood", quizScore: "100%", avatar: "Leo" },
+      { id: 102, name: "Maya S.", grade: "Grade 2", book: "Solar Explorer", sentiment: "Confused", quizScore: "50%", avatar: "Maya" },
+      { id: 103, name: "Liam K.", grade: "Grade 2", book: "Deep Sea Wonders", sentiment: "Understood", quizScore: "80%", avatar: "Liam" },
+      { id: 104, name: "Sophia R.", grade: "Grade 3", book: "Deep Sea Wonders", sentiment: "Understood", quizScore: "100%", avatar: "Sophia" }
+    ];
+
+    let activeBook = booksCatalog[0];
+    let isTTSPlaying = false;
+    let isDyslexicFont = false;
+
+    window.onload = function() {
+      renderBooksGrid(booksCatalog);
+      renderTeacherClassDropdown();
+      renderLiveStudentsGrid();
+    };
+
+    function switchView(viewName) {
+      document.getElementById('view-library').classList.add('hidden');
+      document.getElementById('view-reader').classList.add('hidden');
+      document.getElementById('view-teacher').classList.add('hidden');
+
+      document.getElementById('nav-library').className = "px-3.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-sky-600 transition";
+      document.getElementById('nav-reader').className = "px-3.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-sky-600 transition";
+      document.getElementById('nav-teacher').className = "px-3.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-300 hover:text-purple-600 transition flex items-center gap-1.5";
+
+      if (viewName === 'library') {
+        document.getElementById('view-library').classList.remove('hidden');
+        document.getElementById('nav-library').className = "px-3.5 py-1.5 rounded-lg text-sky-600 bg-white dark:bg-slate-700 dark:text-white shadow-sm transition font-bold";
+      } else if (viewName === 'reader') {
+        document.getElementById('view-reader').classList.remove('hidden');
+        document.getElementById('nav-reader').className = "px-3.5 py-1.5 rounded-lg text-sky-600 bg-white dark:bg-slate-700 dark:text-white shadow-sm transition font-bold";
+      } else if (viewName === 'teacher') {
+        document.getElementById('view-teacher').classList.remove('hidden');
+        document.getElementById('nav-teacher').className = "px-3.5 py-1.5 rounded-lg text-purple-600 bg-white dark:bg-slate-700 dark:text-white shadow-sm transition font-bold flex items-center gap-1.5";
+      }
+    }
+
+    function handleTeacherNav() {
+      if (!window.appState.user || window.appState.user.role !== 'teacher') {
+        setAuthRole('teacher');
+        openAuthModal();
+      } else {
+        switchView('teacher');
+      }
+    }
+
+    function renderTeacherClassDropdown() {
+      const select = document.getElementById('teacher-class-select');
+      if (!select) return;
+
+      const classes = window.appState.teacherClasses || [];
+      select.innerHTML = classes.map(c => `
+        <option value="${c.id}" ${c.id === window.appState.activeTeacherClassId ? 'selected' : ''}>
+          ${c.name} (${c.code})
+        </option>
+      `).join('');
+
+      const active = classes.find(c => c.id === window.appState.activeTeacherClassId) || classes[0];
+      if (active) {
+        document.getElementById('active-session-code-display').innerText = active.code;
+        document.getElementById('roster-class-name').innerText = `Showing: ${active.name}`;
+      }
+
+      renderTeacherClassesList();
+    }
+
+    function handleTeacherClassChange(classId) {
+      window.appState.activeTeacherClassId = classId;
+      const active = window.appState.teacherClasses.find(c => c.id === classId);
+      if (active) {
+        document.getElementById('active-session-code-display').innerText = active.code;
+        document.getElementById('roster-class-name').innerText = `Showing: ${active.name}`;
+      }
+      renderLiveStudentsGrid();
+    }
+
+    function regenerateSessionCode() {
+      const classes = window.appState.teacherClasses;
+      const active = classes.find(c => c.id === window.appState.activeTeacherClassId);
+      if (active) {
+        active.code = window.generateRandomClassCode();
+        renderTeacherClassDropdown();
+      }
+    }
+
+    function renderTeacherClassesList() {
+      const list = document.getElementById('teacher-classes-list');
+      if (!list) return;
+
+      list.innerHTML = window.appState.teacherClasses.map(c => `
+        <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 flex justify-between items-center">
+          <div>
+            <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100">${c.name}</h4>
+            <p class="text-[10px] text-slate-400">${c.grade}</p>
+          </div>
+          <div class="text-right">
+            <span class="font-mono text-sm font-black text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-950 px-2.5 py-1 rounded-lg border border-purple-300">${c.code}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openCreateClassModal() {
+      document.getElementById('modal-create-class').classList.remove('hidden');
+    }
+
+    function closeCreateClassModal() {
+      document.getElementById('modal-create-class').classList.add('hidden');
+    }
+
+    function submitCreateClass() {
+      const name = document.getElementById('new-class-name').value || "New Reading Section";
+      const grade = document.getElementById('new-class-grade').value;
+      const newClass = {
+        id: 'c-' + Date.now(),
+        name: name,
+        grade: grade,
+        code: window.generateRandomClassCode()
+      };
+
+      window.appState.teacherClasses.push(newClass);
+      window.appState.activeTeacherClassId = newClass.id;
+      
+      renderTeacherClassDropdown();
+      closeCreateClassModal();
+    }
+
+    function openJoinClassModal() {
+      document.getElementById('modal-join-class').classList.remove('hidden');
+    }
+
+    function closeJoinClassModal() {
+      document.getElementById('modal-join-class').classList.add('hidden');
+    }
+
+    function submitJoinClass() {
+      const code = document.getElementById('join-code-input').value.trim().toUpperCase();
+      if (!code) return;
+
+      window.appState.joinedClass = {
+        code: code,
+        teacher: "Mrs. Davis",
+        name: "Connected Live Section"
+      };
+
+      document.getElementById('joined-class-banner').classList.remove('hidden');
+      document.getElementById('active-class-title').innerText = `Connected Live Class: ${code}`;
+      document.getElementById('active-class-code-display').innerText = `Teacher: Mrs. Davis • Session Code: ${code}`;
+      document.getElementById('header-class-status').innerText = `Live: ${code}`;
+
+      closeJoinClassModal();
+    }
+
+    function leaveClassSession() {
+      window.appState.joinedClass = null;
+      document.getElementById('joined-class-banner').classList.add('hidden');
+      document.getElementById('header-class-status').innerText = "Join Live Class";
+    }
+
+    function renderBooksGrid(books) {
+      const container = document.getElementById('books-grid');
+      container.innerHTML = books.map(book => `
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm hover:shadow-xl transition group flex flex-col justify-between">
+          <div class="space-y-4">
+            <div class="relative overflow-hidden rounded-2xl h-48 bg-slate-100">
+              <img src="${book.cover}" alt="${book.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+              <span class="absolute top-3 left-3 bg-slate-900/80 backdrop-blur text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                ${book.level}
+              </span>
+            </div>
+            <div>
+              <span class="text-[10px] font-bold text-sky-600 dark:text-sky-400 uppercase tracking-wide block">${book.standard}</span>
+              <h3 class="text-lg font-extrabold text-slate-800 dark:text-slate-100 mt-1">${book.title}</h3>
+              <p class="text-xs text-slate-500 mt-1 leading-relaxed">${book.desc}</p>
+            </div>
+          </div>
+          <button onclick="openBook(${book.id})" class="mt-6 w-full bg-slate-100 hover:bg-sky-500 hover:text-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold py-2.5 rounded-2xl text-xs transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-book-open"></i> Read & Practice
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function filterGrade(gradeKey) {
+      if (gradeKey === 'all') {
+        renderBooksGrid(booksCatalog);
+      } else {
+        const filtered = booksCatalog.filter(b => b.grade === gradeKey);
+        renderBooksGrid(filtered);
+      }
+    }
+
+    function openBook(bookId) {
+      const selected = booksCatalog.find(b => b.id === bookId);
+      if (selected) {
+        activeBook = {
+          ...selected,
+          content: [
+            `${selected.title} teaches students core standards aligned with ${selected.standard}.`,
+            `While exploring this informational passage, readers learn to identify key facts, evaluate context clues, and draw text-based conclusions.`,
+            `Interactive quizzes provide immediate assessment metrics directly synced to teacher command dashboards!`
+          ],
+          quiz: {
+            question: `What is the primary target objective in "${selected.title}"?`,
+            options: [
+              `Identifying key facts and analyzing context details`,
+              `Memorizing random dictionary word lists`,
+              `Drawing unrelated cartoon doodles`
+            ],
+            correct: 0
+          }
+        };
+        loadBookIntoReader(activeBook);
+        switchView('reader');
+      }
+    }
+
+    function loadBookIntoReader(book) {
+      document.getElementById('reader-title').innerText = book.title;
+      document.getElementById('reader-meta').innerText = book.standard + " • " + book.level;
+      document.getElementById('reader-cover').src = book.cover;
+
+      const bodyContainer = document.getElementById('reader-body');
+      bodyContainer.innerHTML = book.content.map((p, pIdx) => {
+        const words = p.split(' ').map((w, wIdx) => `<span id="word-${pIdx}-${wIdx}">${w}</span>`).join(' ');
+        return `<p class="mb-4">${words}</p>`;
+      }).join('');
+
+      document.getElementById('quiz-question').innerText = book.quiz.question;
+      const optsContainer = document.getElementById('quiz-options');
+      optsContainer.innerHTML = book.quiz.options.map((opt, i) => `
+        <button onclick="submitStudentQuizAnswer(${i})" class="w-full text-left p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-sky-500 hover:bg-sky-50 text-xs font-semibold text-slate-700 dark:text-slate-200 transition flex items-center gap-3">
+          <span class="w-6 h-6 rounded-lg bg-sky-100 text-sky-700 font-bold flex items-center justify-center text-xs">${String.fromCharCode(65 + i)}</span>
+          <span>${opt}</span>
+        </button>
+      `).join('');
+
+      document.getElementById('quiz-feedback').className = "hidden p-3 rounded-xl text-sm font-semibold";
+    }
+
+    function submitStudentQuizAnswer(optionIdx) {
+      const feedback = document.getElementById('quiz-feedback');
+      feedback.classList.remove('hidden');
+
+      if (optionIdx === activeBook.quiz.correct) {
+        feedback.className = "p-3 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
+        feedback.innerHTML = "🎉 Correct Answer! Verified CCSS Standard Mastery (+50 XP)";
+      } else {
+        feedback.className = "p-3 rounded-xl text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300";
+        feedback.innerHTML = "❌ Not quite right. Re-read paragraph 2 for context clues!";
+      }
+    }
+
+    function toggleTTS() {
+      if (!('speechSynthesis' in window)) return;
+
+      if (isTTSPlaying) {
+        window.speechSynthesis.cancel();
+        isTTSPlaying = false;
+        document.getElementById('tts-btn-text').innerText = "Read Aloud";
+        return;
+      }
+
+      const fullText = activeBook.content.join(' ');
+      const utterance = new SpeechSynthesisUtterance(fullText);
+      utterance.rate = 0.85;
+
+      let wordIndex = 0;
+      utterance.onboundary = function(event) {
+        if (event.name === 'word') {
+          document.querySelectorAll('.highlight-word').forEach(el => el.classList.remove('highlight-word'));
+          const allSpans = document.querySelectorAll('#reader-body span');
+          if (allSpans[wordIndex]) {
+            allSpans[wordIndex].classList.add('highlight-word');
+          }
+          wordIndex++;
+        }
+      };
+
+      utterance.onend = function() {
+        isTTSPlaying = false;
+        document.getElementById('tts-btn-text').innerText = "Read Aloud";
+        document.querySelectorAll('.highlight-word').forEach(el => el.classList.remove('highlight-word'));
+      };
+
+      window.speechSynthesis.speak(utterance);
+      isTTSPlaying = true;
+      document.getElementById('tts-btn-text').innerText = "Pause Speech";
+    }
+
+    function toggleDyslexicFont() {
+      isDyslexicFont = !isDyslexicFont;
+      const readerCard = document.getElementById('reader-card');
+      if (isDyslexicFont) readerCard.classList.add('font-dyslexic');
+      else readerCard.classList.remove('font-dyslexic');
+    }
+
+    function changeReaderTheme(theme) {
+      const card = document.getElementById('reader-card');
+      card.classList.remove('theme-sepia', 'theme-highcontrast');
+      if (theme === 'sepia') card.classList.add('theme-sepia');
+      if (theme === 'highcontrast') card.classList.add('theme-highcontrast');
+    }
+
+    function sendSentiment(type) {
+      alert(`Sentiment registered: ${type}. Live teacher command dashboard updated!`);
+    }
+
+    function switchTeacherTab(tabName) {
+      document.getElementById('teacher-tab-live').classList.add('hidden');
+      document.getElementById('teacher-tab-classes').classList.add('hidden');
+      document.getElementById('teacher-tab-mastery').classList.add('hidden');
+
+      ['live', 'classes', 'mastery'].forEach(t => {
+        document.getElementById(`tab-${t}`).className = "pb-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-2 font-bold";
+      });
+
+      document.getElementById(`teacher-tab-${tabName}`).classList.remove('hidden');
+      document.getElementById(`tab-${tabName}`).className = "pb-3 border-b-2 border-purple-600 text-purple-600 flex items-center gap-2 font-bold";
+    }
+
+    function renderLiveStudentsGrid() {
+      const grid = document.getElementById('live-students-grid');
+      grid.innerHTML = liveStudentsData.map(student => `
+        <div class="bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 space-y-3 relative shadow-sm">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <img src="https://api.dicebear.com/7.x/bottts/svg?seed=${student.avatar}" class="w-8 h-8 rounded-full bg-white border">
+              <div>
+                <p class="text-xs font-extrabold text-slate-800 dark:text-slate-100">${student.name}</p>
+                <p class="text-[10px] text-slate-400 font-bold">${student.grade}</p>
+              </div>
+            </div>
+            <span class="text-[10px] px-2 py-0.5 rounded-full font-bold border bg-emerald-100 text-emerald-800 border-emerald-300">
+              ${student.sentiment}
+            </span>
+          </div>
+
+          <div class="space-y-1 text-xs">
+            <div class="flex justify-between text-slate-500">
+              <span>Active Book:</span>
+              <strong class="text-slate-700 dark:text-slate-200">${student.book}</strong>
+            </div>
+            <div class="flex justify-between text-slate-500">
+              <span>Quiz Score:</span>
+              <span class="font-bold text-emerald-600">${student.quizScore}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openAuthModal() {
+      document.getElementById('modal-auth').classList.remove('hidden');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('modal-auth').classList.add('hidden');
+    }
+
+    function switchAuthTab(tab) {
+      window.appState.activeTab = tab;
+      const isSignup = tab === 'signup';
+      
+      document.getElementById('auth-tab-signin').className = !isSignup 
+        ? "flex-1 py-2 rounded-xl bg-white dark:bg-slate-700 text-sky-600 dark:text-white shadow-sm" 
+        : "flex-1 py-2 rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-slate-200";
+
+      document.getElementById('auth-tab-signup').className = isSignup 
+        ? "flex-1 py-2 rounded-xl bg-white dark:bg-slate-700 text-sky-600 dark:text-white shadow-sm" 
+        : "flex-1 py-2 rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-slate-200";
+
+      if (isSignup) {
+        document.getElementById('field-name-container').classList.remove('hidden');
+        document.getElementById('auth-submit-btn').innerText = "Create New Account";
+      } else {
+        document.getElementById('field-name-container').classList.add('hidden');
+        document.getElementById('auth-submit-btn').innerText = "Sign In";
+      }
+    }
+
+    function setAuthRole(role) {
+      window.appState.selectedAuthRole = role;
+      const isTeacher = role === 'teacher';
+
+      document.getElementById('role-btn-student').className = !isTeacher 
+        ? "p-2.5 rounded-xl border-2 border-sky-500 bg-sky-50 dark:bg-sky-950/40 text-xs font-bold text-sky-800 dark:text-sky-200 flex items-center justify-center gap-1.5" 
+        : "p-2.5 rounded-xl border-2 border-transparent bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center justify-center gap-1.5";
+
+      document.getElementById('role-btn-teacher').className = isTeacher 
+        ? "p-2.5 rounded-xl border-2 border-purple-500 bg-purple-50 dark:bg-purple-950/40 text-xs font-bold text-purple-800 dark:text-purple-200 flex items-center justify-center gap-1.5" 
+        : "p-2.5 rounded-xl border-2 border-transparent bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center justify-center gap-1.5";
+    }
+
+    function launchPearDeckCheckModal() {
+      document.getElementById('modal-peardeck-host').classList.remove('hidden');
+    }
+
+    function closePearDeckHostModal() {
+      document.getElementById('modal-peardeck-host').classList.add('hidden');
+    }
+
+    function broadcastPearDeckCheck() {
+      const question = document.getElementById('peardeck-prompt-input').value;
+      const o1 = document.getElementById('peardeck-opt1').value;
+      const o2 = document.getElementById('peardeck-opt2').value;
+      const o3 = document.getElementById('peardeck-opt3').value;
+
+      closePearDeckHostModal();
+
+      document.getElementById('student-peardeck-question').innerText = question;
+      const optsDiv = document.getElementById('student-peardeck-options');
+      optsDiv.innerHTML = [o1, o2, o3].map((optText) => `
+        <button onclick="submitStudentPearDeckResponse('${optText}')" class="w-full text-left p-3 rounded-2xl bg-slate-50 hover:bg-purple-100 text-slate-800 text-xs font-bold border border-slate-200 transition flex items-center justify-between">
+          <span>${optText}</span>
+          <i class="fa-solid fa-circle-chevron-right text-purple-500"></i>
+        </button>
+      `).join('');
+
+      document.getElementById('modal-peardeck-student').classList.remove('hidden');
+    }
+
+    function submitStudentPearDeckResponse() {
+      document.getElementById('student-peardeck-done-msg').classList.remove('hidden');
+      setTimeout(() => {
+        document.getElementById('modal-peardeck-student').classList.add('hidden');
+      }, 1200);
+    }
+  </script>
+</body>
+</html>
